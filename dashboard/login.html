@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login — Heartbeat Monitor</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap');
+
+    :root {
+      --bg:     #0a0e1a;
+      --panel:  #111827;
+      --border: #1e2d40;
+      --green:  #00ff88;
+      --red:    #ff3860;
+      --text:   #c9d6e3;
+      --dim:    #4a5568;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--green);
+      border-radius: 12px;
+      padding: 2.5rem 2.8rem;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .logo h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .logo h1 span { color: var(--green); }
+
+    .logo p {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--dim);
+      margin-top: 0.3rem;
+    }
+
+    .error-box {
+      background: #ff386015;
+      border: 1px solid #ff386040;
+      color: var(--red);
+      border-radius: 6px;
+      padding: 0.6rem 1rem;
+      font-size: 0.85rem;
+      margin-bottom: 1.2rem;
+      display: none;
+    }
+
+    .error-box.show { display: block; }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 0.4rem;
+    }
+
+    input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.95rem;
+      padding: 0.7rem 1rem;
+      margin-bottom: 1.2rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus { border-color: var(--green); }
+
+    button {
+      width: 100%;
+      background: var(--green);
+      color: #0a0e1a;
+      border: none;
+      border-radius: 6px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.8rem;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-top: 0.4rem;
+    }
+
+    button:hover { opacity: 0.85; }
+
+    footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.72rem;
+      color: var(--dim);
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <h1>Heartbeat <span>Monitor</span></h1>
+      <p>Distributed System Dashboard</p>
+    </div>
+
+    <div class="error-box" id="err">Invalid username or password.</div>
+
+    <form method="POST" action="/login/submit">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" placeholder="admin" required autofocus/>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" placeholder="••••••••" required/>
+
+      <button type="submit">Log In</button>
+    </form>
+
+    <footer>Khalid Bin Abdullah &nbsp;·&nbsp; ID: 7200671</footer>
+  </div>
+
+  <script>
+    // Show error message if ?error=1 is in the URL
+    if (new URLSearchParams(window.location.search).get('error')) {
+      document.getElementById('err').classList.add('show');
+    }
+  </script>
+</body>
+</html>

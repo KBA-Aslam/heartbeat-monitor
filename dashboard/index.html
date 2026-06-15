@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Heartbeat Monitor</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap');
+
+    :root {
+      --bg:     #0a0e1a;
+      --panel:  #111827;
+      --border: #1e2d40;
+      --green:  #00ff88;
+      --red:    #ff3860;
+      --blue:   #38bdf8;
+      --text:   #c9d6e3;
+      --dim:    #4a5568;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.2rem;
+    }
+
+    header h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #fff; }
+    header h1 span { color: var(--green); }
+
+    .header-right { display: flex; align-items: center; gap: 1.5rem; }
+
+    #clock { font-family: 'Share Tech Mono', monospace; font-size: 0.9rem; color: var(--dim); }
+
+    .logout-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--dim);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.4rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── Summary ── */
+    .summary { display: flex; gap: 1.5rem; margin-bottom: 2rem; flex-wrap: wrap; }
+
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.8rem;
+      text-align: center;
+      min-width: 120px;
+    }
+    .stat-card .number { font-family: 'Share Tech Mono', monospace; font-size: 2rem; font-weight: 700; }
+    .stat-card .label  { font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-top: 0.2rem; }
+    .stat-card.online  .number { color: var(--green); text-shadow: 0 0 12px #00ff8866; }
+    .stat-card.offline .number { color: var(--red);   text-shadow: 0 0 12px #ff386066; }
+    .stat-card.total   .number { color: #fff; }
+    .stat-card.devices .number { color: var(--blue);  text-shadow: 0 0 12px #38bdf866; }
+
+    /* ── Section titles ── */
+    .section-title {
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Client grid ── */
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .client-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.4rem 1.6rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+    .client-card:hover { transform: translateY(-3px); }
+    .client-card.online  { border-left: 3px solid var(--green); }
+    .client-card.offline { border-left: 3px solid var(--red);   }
+
+    .client-card.online::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at top left, #00ff8808 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .client-card.offline::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at top left, #ff386008 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .client-id   { font-size: 1.1rem; font-weight: 700; color: #fff; letter-spacing: 0.04em; }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot.online  { background: var(--green); box-shadow: 0 0 12px #00ff8866; animation: pulse 1.5s ease-in-out infinite; }
+    .dot.offline { background: var(--red);   box-shadow: 0 0 12px #ff386066; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.75); }
+    }
+
+    .card-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.4rem; color: var(--dim); }
+    .card-row span:last-child { font-family: 'Share Tech Mono', monospace; color: var(--text); }
+
+    .badge { display: inline-block; padding: 0.15rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+    .badge.online  { background: #00ff8820; color: var(--green); border: 1px solid #00ff8840; }
+    .badge.offline { background: #ff386020; color: var(--red);   border: 1px solid #ff386040; }
+
+    #empty-clients { display: none; color: var(--dim); font-size: 0.95rem; margin-bottom: 2rem; padding: 2rem; text-align: center; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; }
+
+    /* ── Device section ── */
+    .device-layout { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; align-items: start; }
+
+    @media (max-width: 800px) { .device-layout { grid-template-columns: 1fr; } }
+
+    /* Device table */
+    .device-table { width: 100%; border-collapse: collapse; }
+    .device-table th {
+      text-align: left; font-size: 0.72rem; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--dim);
+      padding: 0.6rem 1rem; border-bottom: 1px solid var(--border);
+    }
+    .device-table td {
+      padding: 0.85rem 1rem; border-bottom: 1px solid var(--border);
+      font-size: 0.9rem; vertical-align: middle;
+    }
+    .device-table tr:last-child td { border-bottom: none; }
+    .device-table tr:hover td { background: #ffffff05; }
+
+    .device-name { font-weight: 700; color: #fff; }
+    .device-desc { color: var(--dim); font-size: 0.82rem; }
+    .device-by   { font-family: 'Share Tech Mono', monospace; font-size: 0.78rem; color: var(--blue); }
+
+    .delete-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--dim);
+      font-size: 0.78rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      font-family: 'Rajdhani', sans-serif;
+      letter-spacing: 0.05em;
+    }
+    .delete-btn:hover { border-color: var(--red); color: var(--red); }
+
+    #empty-devices { color: var(--dim); font-size: 0.9rem; padding: 2rem; text-align: center; }
+
+    /* Add device form */
+    .add-device-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--blue);
+      border-radius: 10px;
+      padding: 1.4rem 1.6rem;
+    }
+
+    .add-device-card h3 {
+      font-size: 0.85rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--blue); margin-bottom: 1.2rem;
+    }
+
+    .form-label {
+      display: block; font-size: 0.72rem; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--dim); margin-bottom: 0.35rem;
+    }
+
+    .form-input {
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text);
+      font-family: 'Share Tech Mono', monospace; font-size: 0.9rem;
+      padding: 0.6rem 0.9rem; margin-bottom: 1rem; outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus { border-color: var(--blue); }
+
+    .add-btn {
+      width: 100%; background: var(--blue); color: #0a0e1a;
+      border: none; border-radius: 6px;
+      font-family: 'Rajdhani', sans-serif; font-size: 0.95rem;
+      font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.7rem; cursor: pointer; transition: opacity 0.2s;
+    }
+    .add-btn:hover { opacity: 0.85; }
+
+    .form-error { color: var(--red); font-size: 0.8rem; margin-top: 0.5rem; display: none; }
+    .form-error.show { display: block; }
+
+    /* ── Footer ── */
+    footer { margin-top: 3rem; text-align: center; font-size: 0.75rem; color: var(--dim); letter-spacing: 0.06em; }
+    footer span { color: var(--green); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Heartbeat <span>Monitor</span></h1>
+    <div class="header-right">
+      <div id="clock">--:--:--</div>
+      <a href="/logout" class="logout-btn">Logout</a>
+    </div>
+  </header>
+
+  <!-- Summary counters -->
+  <div class="summary">
+    <div class="stat-card total">
+      <div class="number" id="count-total">0</div>
+      <div class="label">Total Clients</div>
+    </div>
+    <div class="stat-card online">
+      <div class="number" id="count-online">0</div>
+      <div class="label">Online</div>
+    </div>
+    <div class="stat-card offline">
+      <div class="number" id="count-offline">0</div>
+      <div class="label">Offline</div>
+    </div>
+    <div class="stat-card devices">
+      <div class="number" id="count-devices">0</div>
+      <div class="label">Devices</div>
+    </div>
+  </div>
+
+  <!-- Client heartbeat cards -->
+  <div class="section-title">Live Client Status</div>
+  <div id="grid"></div>
+  <div id="empty-clients">No clients connected yet. Start a client with: <code>go run client/main.go -id=client-1</code></div>
+
+  <!-- Device management -->
+  <div class="section-title">Device Management</div>
+  <div class="device-layout">
+
+    <!-- Device list table -->
+    <div>
+      <table class="device-table" id="device-table">
+        <thead>
+          <tr>
+            <th>Device Name</th>
+            <th>Description</th>
+            <th>Registered By</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="device-body">
+          <tr><td colspan="4" id="empty-devices">No devices registered yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Add device form -->
+    <div class="add-device-card">
+      <h3>+ Register Device</h3>
+      <form id="add-form">
+        <label class="form-label" for="dev-name">Device Name *</label>
+        <input class="form-input" type="text" id="dev-name" name="name" placeholder="e.g. server-rack-01" required/>
+
+        <label class="form-label" for="dev-desc">Description</label>
+        <input class="form-input" type="text" id="dev-desc" name="description" placeholder="e.g. Primary web server"/>
+
+        <button type="submit" class="add-btn">Register Device</button>
+        <div class="form-error" id="form-error">Device name already exists.</div>
+      </form>
+    </div>
+
+  </div>
+
+  <footer>Auto-refreshes every <span>3s</span> &nbsp;·&nbsp; Khalid Bin Abdullah &nbsp;·&nbsp; ID: 7200671</footer>
+
+  <script>
+    function timeAgo(dateStr) {
+      const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+      if (diff < 2)  return 'just now';
+      if (diff < 60) return `${diff}s ago`;
+      return `${Math.floor(diff / 60)}m ${diff % 60}s ago`;
+    }
+
+    function updateClock() {
+      document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+    }
+
+    // ── Fetch and render client heartbeat status ──
+    async function fetchStatus() {
+      try {
+        const res = await fetch('/status');
+        const clients = await res.json();
+
+        document.getElementById('count-total').textContent   = clients.length;
+        document.getElementById('count-online').textContent  = clients.filter(c => c.status === 'online').length;
+        document.getElementById('count-offline').textContent = clients.filter(c => c.status === 'offline').length;
+
+        const grid  = document.getElementById('grid');
+        const empty = document.getElementById('empty-clients');
+
+        if (!clients.length) {
+          grid.innerHTML = '';
+          empty.style.display = 'block';
+          return;
+        }
+        empty.style.display = 'none';
+
+        clients.sort((a, b) => {
+          if (a.status !== b.status) return a.status === 'online' ? -1 : 1;
+          return a.id.localeCompare(b.id);
+        });
+
+        grid.innerHTML = clients.map(c => `
+          <div class="client-card ${c.status}">
+            <div class="card-header">
+              <div class="client-id">${c.id}</div>
+              <div class="dot ${c.status}"></div>
+            </div>
+            <div class="card-row"><span>Status</span><span><span class="badge ${c.status}">${c.status}</span></span></div>
+            <div class="card-row"><span>Last Seen</span><span>${timeAgo(c.last_seen)}</span></div>
+            <div class="card-row"><span>Info</span><span>${c.last_status || '—'}</span></div>
+          </div>
+        `).join('');
+      } catch (e) { console.error('Status fetch error:', e); }
+    }
+
+    // ── Fetch and render devices ──
+    async function fetchDevices() {
+      try {
+        const res = await fetch('/devices');
+        const devices = await res.json();
+
+        document.getElementById('count-devices').textContent = devices.length;
+
+        const tbody = document.getElementById('device-body');
+        if (!devices.length) {
+          tbody.innerHTML = '<tr><td colspan="4" id="empty-devices" style="text-align:center;color:var(--dim);padding:2rem;">No devices registered yet.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = devices.map(d => `
+          <tr>
+            <td><div class="device-name">${d.name}</div></td>
+            <td><div class="device-desc">${d.description || '—'}</div></td>
+            <td><div class="device-by">${d.registered_by}</div></td>
+            <td><button class="delete-btn" onclick="deleteDevice(${d.id})">Remove</button></td>
+          </tr>
+        `).join('');
+      } catch (e) { console.error('Devices fetch error:', e); }
+    }
+
+    // ── Delete a device ──
+    async function deleteDevice(id) {
+      if (!confirm('Remove this device?')) return;
+      try {
+        await fetch('/devices/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id })
+        });
+        fetchDevices();
+      } catch (e) { console.error('Delete error:', e); }
+    }
+
+    // ── Add device form submission ──
+    document.getElementById('add-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errBox = document.getElementById('form-error');
+      errBox.classList.remove('show');
+
+      const formData = new FormData(e.target);
+
+      const res = await fetch('/devices/add', { method: 'POST', body: formData });
+
+      if (res.redirected || res.ok) {
+        e.target.reset();
+        fetchDevices();
+      } else if (res.status === 409) {
+        errBox.textContent = 'Device name already exists.';
+        errBox.classList.add('show');
+      } else {
+        errBox.textContent = 'Failed to add device. Try again.';
+        errBox.classList.add('show');
+      }
+    });
+
+    // ── Init ──
+    updateClock();
+    fetchStatus();
+    fetchDevices();
+    setInterval(updateClock, 1000);
+    setInterval(fetchStatus, 3000);
+    setInterval(fetchDevices, 5000);
+  </script>
+</body>
+</html>
