@@ -1,5 +1,5 @@
 # Distributed Heartbeat Monitoring System
-**Khalid Bin Abdullah — ID: 7200671**
+**Khalid Bin Abdullah**
 
 A distributed heartbeat monitoring system built in Go. Multiple client nodes send periodic heartbeat messages to a central server. The server tracks each client's status in real time, detects failures when a client goes silent, and provides a secure web dashboard for authenticated users to monitor clients and manage registered devices.
 
